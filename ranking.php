@@ -126,7 +126,9 @@
                             <div class="row align-items-center">
                                 <div class="col-2 col-md-1">
                                     <div class="h4 mb-0 text-center ${rankColor}">
-                                        ${crownIcon}${rank}
+                                        <span class="d-inline-flex align-items-center justify-content-center">
+                                         ${crownIcon}${rank}位
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="col-5 col-md-6">

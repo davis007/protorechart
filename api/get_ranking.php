@@ -4,8 +4,7 @@ header('Access-Control-Allow-Origin: *');
 
 try {
     // データベース接続
-    $db = new PDO('sqlite:../data/prices.db');
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    require_once __DIR__ . '/db.php';
 
     // ランキングデータの取得（同一ユーザーの最高成績のみ表示）
     $stmt = $db->query("

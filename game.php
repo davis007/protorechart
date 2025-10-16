@@ -65,6 +65,17 @@ if (!isset($_SESSION['game_data'])) {
                             <button class="btn btn-sm btn-outline-secondary" id="toggleIndicators">インジケーター表示</button>
                         </div>
                     </div>
+                    <!-- テクニカル切替 -->
+                    <div class="card-body py-2 border-bottom">
+                        <div id="indicatorToggles" class="mb-2">
+                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="MA5" checked> MA5</label>
+                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="MA25" checked> MA25</label>
+                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="BB"> BB</label>
+                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="MACD"> MACD</label>
+                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="RSI"> RSI</label>
+                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="RCI"> RCI</label>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div id="chartContainer" style="height: 500px;"></div>
                     </div>

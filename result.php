@@ -13,24 +13,39 @@ $profit_loss = $game_data['profit_loss'];
 $username = $game_data['username'];
 $twitter_username = $game_data['twitter_username'];
 
+// 評価の計算（10段階） - ランキング登録の成否に関わらず表示用に計算
+$profit_rate = ($profit_loss / 1000000) * 100;
+if ($profit_rate >= 15) $rating = 10;
+elseif ($profit_rate >= 10) $rating = 9;
+elseif ($profit_rate >= 5) $rating = 8;
+elseif ($profit_rate >= 2) $rating = 7;
+elseif ($profit_rate >= 0) $rating = 6;
+elseif ($profit_rate >= -2) $rating = 5;
+elseif ($profit_rate >= -5) $rating = 4;
+elseif ($profit_rate >= -10) $rating = 3;
+elseif ($profit_rate >= -15) $rating = 2;
+else $rating = 1;
+
 // ランキング自動登録
 try {
-    // データベース接続
-    $db = new PDO('sqlite:../data/prices.db');
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // データベース接続（詳細なデバッグ）
+    $db_path = '/Volumes/ARSTH-2TB/dev/protorechart/data/prices.db';
 
-    // 評価の計算（10段階）
-    $profit_rate = ($profit_loss / 1000000) * 100;
-    if ($profit_rate >= 15) $rating = 10;
-    elseif ($profit_rate >= 10) $rating = 9;
-    elseif ($profit_rate >= 5) $rating = 8;
-    elseif ($profit_rate >= 2) $rating = 7;
-    elseif ($profit_rate >= 0) $rating = 6;
-    elseif ($profit_rate >= -2) $rating = 5;
-    elseif ($profit_rate >= -5) $rating = 4;
-    elseif ($profit_rate >= -10) $rating = 3;
-    elseif ($profit_rate >= -15) $rating = 2;
-    else $rating = 1;
+    // デバッグ情報を画面とログ両方に出力
+    $debug_info = [
+        'db_path' => $db_path,
+        'file_exists' => file_exists($db_path),
+        'is_readable' => is_readable($db_path),
+        'is_writable' => is_writable($db_path),
+        'current_dir' => getcwd(),
+        '__DIR__' => __DIR__,
+        'dirname(__DIR__)' => dirname(__DIR__)
+    ];
+
+    error_log("デバッグ情報: " . print_r($debug_info, true));
+
+    $db = new PDO('sqlite:' . $db_path);
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // デバッグ用：セッションデータの確認
     error_log("ランキング登録: username={$username}, twitter={$twitter_username}, assets={$final_assets}, profit={$profit_loss}");
@@ -55,6 +70,10 @@ try {
     $ranking_saved = false;
     $ranking_error = $e->getMessage();
     error_log("ランキング登録エラー: " . $e->getMessage());
+    error_log("エラーパス: " . dirname(__DIR__) . '/data/prices.db');
+
+    // エラー詳細を画面に表示
+    $ranking_error .= " (パス: " . $db_path . ")";
 }
 
 // セッション削除（前のゲームデータをクリア）

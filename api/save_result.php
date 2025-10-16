@@ -55,8 +55,7 @@ try {
     else $rating = 1;
 
     // データベース接続
-    $db = new PDO('sqlite:../data/prices.db');
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    require_once __DIR__ . '/db.php';
 
     // ランキングデータの保存
     $stmt = $db->prepare("

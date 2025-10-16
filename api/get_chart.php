@@ -3,8 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 try {
-    $db = new PDO('sqlite:' . dirname(__DIR__) . '/data/prices.db');
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    require_once __DIR__ . '/db.php';
 
     // ランダムな銘柄を取得
     $stmt = $db->query("SELECT code, name FROM companies ORDER BY RANDOM() LIMIT 1");
@@ -24,8 +23,8 @@ try {
     $currentDate = $dates[0];
     $previousDate = $dates[1];
 
-    // 前日データ（初期チャート用 - 後場14:15〜15:30の15本を固定背景として使用）
-    $stmt = $db->prepare("SELECT datetime, open, high, low, close, volume FROM stock_prices WHERE company_code = ? AND date(datetime) = ? AND time(datetime) >= '14:15:00' AND time(datetime) <= '15:30:00' ORDER BY datetime ASC");
+    // 前日データ（初期チャート用 - 後場14:15〜15:20のデータを使用）
+    $stmt = $db->prepare("SELECT datetime, open, high, low, close, volume FROM stock_prices WHERE company_code = ? AND date(datetime) = ? AND time(datetime) >= '14:15:00' AND time(datetime) <= '15:20:00' ORDER BY datetime ASC");
     $stmt->execute([$code, $previousDate]);
     $previousDayPrices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

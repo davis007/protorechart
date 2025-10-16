@@ -2,7 +2,7 @@
 class GameManager {
     constructor(gameData) {
         this.gameData = gameData;
-        this.currentPrice = 0;
+        this.currentPrice = null; // 初期値はnullに変更
         this.isPositionOpen = false;
         this.positionType = null; // 'buy' or 'sell'
         this.entryPrice = 0;
@@ -52,6 +52,9 @@ class GameManager {
         const currentData = chartManager.updateDisplayedData();
         this.currentPrice = currentData.price;
 
+        // UIを更新して現在価格を表示
+        this.updateUI();
+
         // 次のステップボタンを有効化
         $('#nextStepBtn').prop('disabled', false);
     }
@@ -71,10 +74,22 @@ class GameManager {
 
         // インジケーター表示切り替え
         $('#toggleIndicators').click(() => this.toggleIndicators());
+
+        // インジケーター個別トグル
+        $(document).on('change', '.indicator-toggle', function () {
+            const key = $(this).data('key');        // "MA5" | "BB" | "MACD" | ...
+            const on  = $(this).is(':checked');
+            if (chartManager) chartManager.toggleIndicator(key, on);
+        });
     }
 
     // 取引の実行
     executeTrade(type) {
+        if (this.currentPrice === null) {
+            alert('現在価格が読み込まれていません。しばらくお待ちください。');
+            return;
+        }
+
         if (this.isPositionOpen) {
             alert('既にポジションを持っています。利確してから新しい取引を行ってください。');
             return;
@@ -191,8 +206,21 @@ class GameManager {
 
     // UIの更新
     updateUI() {
+        // 現在価格の表示
+        if (this.currentPrice === null) {
+            $('#currentPrice').text('---');
+        } else {
+            $('#currentPrice').text(`${this.currentPrice.toLocaleString()}円`);
+        }
+
+        // 時間情報の更新
+        if (chartManager) {
+            const currentData = chartManager.updateDisplayedData();
+            $('#timeInfo').text(`時間: ${currentData.time}`);
+        }
+
         // 資金情報の更新
-        $('#currentCash').text(`保有資金: ${this.gameData.current_cash.toLocaleString()}円`);
+        $('#currentCash').text(`保有資金: ${Math.floor(this.gameData.current_cash).toLocaleString()}円`);
 
         // 損益情報の更新
         const profitLossText = this.gameData.profit_loss >= 0 ?
