@@ -61,11 +61,13 @@ class GameManager {
         // 取引ボタン
         $('#buyBtn').click(() => this.executeTrade('buy'));
         $('#sellBtn').click(() => this.executeTrade('sell'));
-        $('#holdBtn').click(() => this.holdPosition());
         $('#closePositionBtn').click(() => this.closePosition());
 
         // 次のステップボタン
         $('#nextStepBtn').click(() => this.nextStep());
+
+        // ゲーム終了ボタン
+        $('#finishGameBtn').click(() => this.finishGame());
 
         // インジケーター表示切り替え
         $('#toggleIndicators').click(() => this.toggleIndicators());
@@ -134,7 +136,9 @@ class GameManager {
         } else {
             // 売りポジションの利確
             profitLoss = entryValue - currentValue;
-            this.gameData.current_cash += entryValue + profitLoss;
+            // 売りの場合は証拠金を返却し、利益を加算
+            // 証拠金は取引時に消費されていないので、利益のみを加算
+            this.gameData.current_cash += profitLoss;
         }
 
         this.gameData.profit_loss += profitLoss;
@@ -150,14 +154,6 @@ class GameManager {
         this.updateUI();
     }
 
-    // HOLD（何もしない）
-    holdPosition() {
-        // ポジションがある場合は評価損益を計算
-        if (this.isPositionOpen) {
-            this.calculateUnrealizedProfitLoss();
-        }
-        this.updateUI();
-    }
 
     // 評価損益の計算
     calculateUnrealizedProfitLoss() {
@@ -274,18 +270,41 @@ class GameManager {
 
     // ゲーム終了処理
     finishGame() {
+        // 確認ダイアログを表示
+        const confirmResult = confirm('ゲームを終了して結果画面に移動しますか？\n\n現在の資産: ' + this.gameData.current_cash.toLocaleString() + '円\n損益: ' + (this.gameData.profit_loss >= 0 ? '+' : '') + this.gameData.profit_loss.toLocaleString() + '円');
+
+        if (!confirmResult) {
+            return; // キャンセルされた場合は何もしない
+        }
+
         // 最終損益の計算
         const finalAssets = this.gameData.current_cash;
         const totalProfitLoss = this.gameData.profit_loss;
 
-        // セッションデータの更新
-        this.gameData.current_cash = finalAssets;
-        this.gameData.profit_loss = totalProfitLoss;
+        // セッションデータの更新（サーバーに保存）
+        $.ajax({
+            url: 'api/update_session.php',
+            type: 'POST',
+            data: {
+                current_cash: finalAssets,
+                profit_loss: totalProfitLoss
+            },
+            success: (response) => {
+                if (response.success) {
+                    console.log('セッションデータを更新しました');
+                } else {
+                    console.error('セッションデータの更新に失敗しました:', response.error);
+                }
+            },
+            error: () => {
+                console.error('セッションデータの更新に失敗しました');
+            }
+        });
 
         // 結果画面へリダイレクト
         setTimeout(() => {
             window.location.href = 'result.php';
-        }, 2000);
+        }, 1000);
     }
 }
 

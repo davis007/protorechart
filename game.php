@@ -99,7 +99,6 @@ if (!isset($_SESSION['game_data'])) {
                         <!-- 取引ボタン -->
                         <div class="btn-group-vertical w-100 mb-3">
                             <button class="btn btn-success btn-lg" id="buyBtn">買い</button>
-                            <button class="btn btn-warning btn-lg" id="holdBtn">HOLD</button>
                             <button class="btn btn-danger btn-lg" id="sellBtn">売り</button>
                         </div>
 
@@ -113,6 +112,9 @@ if (!isset($_SESSION['game_data'])) {
 
                         <!-- 次の時間へ進むボタン -->
                         <button class="btn btn-primary btn-block mt-3" id="nextStepBtn" disabled>次の5分へ進む</button>
+
+                        <!-- ゲーム終了ボタン -->
+                        <button class="btn btn-warning btn-block mt-2" id="finishGameBtn">ゲーム終了</button>
                     </div>
                 </div>
 

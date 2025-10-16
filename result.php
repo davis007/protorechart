@@ -64,7 +64,7 @@ if (isset($_POST['save_ranking'])) {
                         <!-- 最終資産 -->
                         <div class="mb-4">
                             <h2 class="text-success"><?php echo number_format($final_assets); ?>円</h2>
-                            <p class="lead">あなたの最終資産</p>
+                            <p class="lead"><?php echo htmlspecialchars($username); ?>さんの最終資産</p>
                         </div>
 
                         <!-- 損益表示 -->

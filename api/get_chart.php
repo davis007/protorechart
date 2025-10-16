@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 try {
-    $db = new PDO('sqlite:../data/prices.db');
+    $db = new PDO('sqlite:' . dirname(__DIR__) . '/data/prices.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // ランダムな銘柄を取得
@@ -24,18 +24,18 @@ try {
     $currentDate = $dates[0];
     $previousDate = $dates[1];
 
-    // 前日データ（初期チャート用 - 後場14:15〜15:30の15本）
+    // 前日データ（初期チャート用 - 後場14:15〜15:30の15本を固定背景として使用）
     $stmt = $db->prepare("SELECT datetime, open, high, low, close, volume FROM stock_prices WHERE company_code = ? AND date(datetime) = ? AND time(datetime) >= '14:15:00' AND time(datetime) <= '15:30:00' ORDER BY datetime ASC");
     $stmt->execute([$code, $previousDate]);
     $previousDayPrices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 当日データ（最初の1本だけを初期チャートに含める）
-    $stmt = $db->prepare("SELECT datetime, open, high, low, close, volume FROM stock_prices WHERE company_code = ? AND date(datetime) = ? ORDER BY datetime ASC LIMIT 1");
+    // 当日データ（最初の1本だけを初期チャートに含める - 9:00のデータを取得）
+    $stmt = $db->prepare("SELECT datetime, open, high, low, close, volume FROM stock_prices WHERE company_code = ? AND date(datetime) = ? AND time(datetime) >= '09:00:00' ORDER BY datetime ASC LIMIT 1");
     $stmt->execute([$code, $currentDate]);
     $currentDayFirst = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 残りの当日データ（追加分）
-    $stmt = $db->prepare("SELECT datetime, open, high, low, close, volume FROM stock_prices WHERE company_code = ? AND date(datetime) = ? ORDER BY datetime ASC LIMIT -1 OFFSET 1");
+    // 残りの当日データ（追加分 - 9:00以降のデータを取得）
+    $stmt = $db->prepare("SELECT datetime, open, high, low, close, volume FROM stock_prices WHERE company_code = ? AND date(datetime) = ? AND time(datetime) >= '09:00:00' ORDER BY datetime ASC LIMIT -1 OFFSET 1");
     $stmt->execute([$code, $currentDate]);
     $additionalPrices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
