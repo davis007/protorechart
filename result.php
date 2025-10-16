@@ -13,28 +13,57 @@ $profit_loss = $game_data['profit_loss'];
 $username = $game_data['username'];
 $twitter_username = $game_data['twitter_username'];
 
-// 評価の計算（10段階）
-$profit_rate = ($profit_loss / 1000000) * 100;
-if ($profit_rate >= 15) $rating = 10;
-elseif ($profit_rate >= 10) $rating = 9;
-elseif ($profit_rate >= 5) $rating = 8;
-elseif ($profit_rate >= 2) $rating = 7;
-elseif ($profit_rate >= 0) $rating = 6;
-elseif ($profit_rate >= -2) $rating = 5;
-elseif ($profit_rate >= -5) $rating = 4;
-elseif ($profit_rate >= -10) $rating = 3;
-elseif ($profit_rate >= -15) $rating = 2;
-else $rating = 1;
+// ランキング自動登録
+try {
+    // データベース接続
+    $db = new PDO('sqlite:../data/prices.db');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // 評価の計算（10段階）
+    $profit_rate = ($profit_loss / 1000000) * 100;
+    if ($profit_rate >= 15) $rating = 10;
+    elseif ($profit_rate >= 10) $rating = 9;
+    elseif ($profit_rate >= 5) $rating = 8;
+    elseif ($profit_rate >= 2) $rating = 7;
+    elseif ($profit_rate >= 0) $rating = 6;
+    elseif ($profit_rate >= -2) $rating = 5;
+    elseif ($profit_rate >= -5) $rating = 4;
+    elseif ($profit_rate >= -10) $rating = 3;
+    elseif ($profit_rate >= -15) $rating = 2;
+    else $rating = 1;
+
+    // デバッグ用：セッションデータの確認
+    error_log("ランキング登録: username={$username}, twitter={$twitter_username}, assets={$final_assets}, profit={$profit_loss}");
+
+    // ランキングデータの保存
+    $stmt = $db->prepare("
+        INSERT INTO rankings
+        (username, twitter_username, final_assets, profit_loss, rating)
+        VALUES (?, ?, ?, ?, ?)
+    ");
+
+    $stmt->execute([
+        $username,
+        $twitter_username ?: null,
+        $final_assets,
+        $profit_loss,
+        $rating
+    ]);
+
+    $ranking_saved = true;
+} catch (Exception $e) {
+    $ranking_saved = false;
+    $ranking_error = $e->getMessage();
+    error_log("ランキング登録エラー: " . $e->getMessage());
+}
+
+// セッション削除（前のゲームデータをクリア）
+unset($_SESSION['game_data']);
 
 // X共有用テキストの生成
 $share_text = urlencode("{$username}さんのデイトレ結果 {$profit_loss}円 でした！\n評価: {$rating}/10\n#プロトレチャート #デイトレ練習");
 $share_url = "https://twitter.com/intent/tweet?text={$share_text}";
 
-// ランキング登録
-if (isset($_POST['save_ranking'])) {
-    // ここでランキングデータベースに保存
-    // 実際の実装では save_result.php API を呼び出す
-}
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -94,30 +123,40 @@ if (isset($_POST['save_ranking'])) {
                     </div>
                 </div>
 
-                <!-- アクションボタン -->
+                <!-- ランキング登録ステータス -->
                 <div class="row mt-4">
+                    <div class="col-md-12 mb-3">
+                        <?php if ($ranking_saved): ?>
+                            <div class="alert alert-success text-center">
+                                <h5 class="mb-1">✅ ランキングに自動登録しました</h5>
+                                <p class="mb-0">ランキングページで順位を確認できます</p>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-warning text-center">
+                                <h5 class="mb-1">⚠️ ランキング登録に失敗しました</h5>
+                                <p class="mb-0"><?php echo htmlspecialchars($ranking_error ?? '不明なエラー'); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- アクションボタン -->
+                <div class="row mt-2">
                     <div class="col-md-6 mb-3">
                         <a href="<?php echo $share_url; ?>" target="_blank" class="btn btn-info btn-lg btn-block">
                             Xでシェアする
                         </a>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <form method="POST" class="d-inline w-100">
-                            <button type="submit" name="save_ranking" class="btn btn-success btn-lg btn-block">
-                                ランキングに登録
-                            </button>
-                        </form>
+                        <a href="ranking.php" class="btn btn-primary btn-lg btn-block">
+                            ランキングを見る
+                        </a>
                     </div>
                 </div>
 
                 <!-- その他のアクション -->
                 <div class="row mt-3">
-                    <div class="col-md-6 mb-2">
-                        <a href="ranking.php" class="btn btn-outline-primary btn-block">
-                            ランキングを見る
-                        </a>
-                    </div>
-                    <div class="col-md-6 mb-2">
+                    <div class="col-md-12 mb-2">
                         <a href="index.php" class="btn btn-outline-secondary btn-block">
                             トップに戻る
                         </a>
@@ -147,7 +186,7 @@ if (isset($_POST['save_ranking'])) {
         </div>
     </footer>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -83,27 +83,20 @@ class GameManager {
         const quantity = parseInt($('#stockQuantity').val());
         const totalCost = this.currentPrice * quantity;
 
-        // 資金チェック
-        if (type === 'buy' && totalCost > this.gameData.current_cash) {
-            alert('資金が不足しています');
-            return;
-        }
+        // 信用取引の証拠金計算（30%）
+        const marginRequired = totalCost * 0.3;
 
-        // 信用取引の場合は売りも可能（証拠金の概念は簡略化）
-        if (type === 'sell') {
-            // 売りの場合は証拠金が必要（簡易的なチェック）
-            const marginRequired = totalCost * 0.3; // 30%の証拠金
-            if (marginRequired > this.gameData.current_cash) {
-                alert('証拠金が不足しています');
-                return;
-            }
+        // 証拠金チェック
+        if (marginRequired > this.gameData.current_cash) {
+            alert('証拠金が不足しています');
+            return;
         }
 
         // 取引の実行
         this.openPosition(type, quantity, this.currentPrice);
         this.updateUI();
 
-        alert(`${type === 'buy' ? '買い' : '売り'}注文を実行しました\n数量: ${quantity}株\n価格: ${this.currentPrice.toLocaleString()}円`);
+        alert(`${type === 'buy' ? '買い' : '売り'}注文を実行しました\n数量: ${quantity}株\n価格: ${this.currentPrice.toLocaleString()}円\n必要証拠金: ${marginRequired.toLocaleString()}円`);
     }
 
     // ポジションのオープン
@@ -113,11 +106,9 @@ class GameManager {
         this.positionQuantity = quantity;
         this.entryPrice = price;
 
-        // 買いの場合は資金から減算、売りの場合は証拠金のみ（簡易実装）
-        if (type === 'buy') {
-            const cost = price * quantity;
-            this.gameData.current_cash -= cost;
-        }
+        // 信用取引：買い・売りともに証拠金（30%）のみを資金から減算
+        const marginRequired = price * quantity * 0.3;
+        this.gameData.current_cash -= marginRequired;
     }
 
     // ポジションのクローズ
@@ -129,16 +120,19 @@ class GameManager {
 
         let profitLoss = 0;
 
+        // 証拠金の返却（建玉時に減算した30%を戻す）
+        const marginReturn = this.entryPrice * this.positionQuantity * 0.3;
+
         if (this.positionType === 'buy') {
-            // 買いポジションの利確
+            // 買い建て（ロング）ポジションの利確
             profitLoss = currentValue - entryValue;
-            this.gameData.current_cash += currentValue;
+            // 証拠金返却 + 損益を加算
+            this.gameData.current_cash += marginReturn + profitLoss;
         } else {
-            // 売りポジションの利確
+            // 売り建て（ショート）ポジションの利確
             profitLoss = entryValue - currentValue;
-            // 売りの場合は証拠金を返却し、利益を加算
-            // 証拠金は取引時に消費されていないので、利益のみを加算
-            this.gameData.current_cash += profitLoss;
+            // 証拠金返却 + 損益を加算
+            this.gameData.current_cash += marginReturn + profitLoss;
         }
 
         this.gameData.profit_loss += profitLoss;
@@ -235,6 +229,14 @@ class GameManager {
             $('#closePositionSection').hide();
         }
 
+        // 15:30で「次の5分へ進む」ボタンを非表示にする
+        const currentTime = $('#timeInfo').text();
+        if (currentTime.includes('15:30')) {
+            $('#nextStepBtn').hide();
+        } else {
+            $('#nextStepBtn').show();
+        }
+
         // ゲーム終了チェック
         if (chartManager && chartManager.isGameFinished()) {
             $('#nextStepBtn').prop('disabled', true).text('ゲーム終了');
@@ -277,9 +279,37 @@ class GameManager {
             return; // キャンセルされた場合は何もしない
         }
 
+        // ポジションがある場合は決済する
+        if (this.isPositionOpen) {
+            this.closePosition();
+        }
+
         // 最終損益の計算
         const finalAssets = this.gameData.current_cash;
         const totalProfitLoss = this.gameData.profit_loss;
+
+        // ランキングデータをデータベースに登録
+        $.ajax({
+            url: 'api/save_result.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                username: this.gameData.username,
+                twitter_username: this.gameData.twitter_username,
+                final_assets: finalAssets,
+                profit_loss: totalProfitLoss
+            }),
+            success: (response) => {
+                if (response.success) {
+                    console.log('ランキングデータを登録しました');
+                } else {
+                    console.error('ランキングデータの登録に失敗しました:', response.error);
+                }
+            },
+            error: () => {
+                console.error('ランキングデータの登録に失敗しました');
+            }
+        });
 
         // セッションデータの更新（サーバーに保存）
         $.ajax({

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ランキング - プロトレチャート</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
 </head>
 <body>
@@ -34,18 +35,18 @@
             </div>
         </div>
 
-        <!-- ランキング説明 -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <h6>ランキングについて</h6>
-                <ul class="list-unstyled mb-0">
-                    <li>✅ 最終資産額でランキングされます</li>
-                    <li>✅ 1位〜5位には王冠アイコンが表示されます</li>
-                    <li>✅ Xユーザー名を登録するとリンクが表示されます</li>
-                    <li>✅ ゲーム終了時にランキング登録が可能です</li>
-                </ul>
-            </div>
-        </div>
+                <!-- ランキング説明 -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h6>ランキングについて</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li>✅ 最終資産額でランキングされます</li>
+                            <li>✅ 1位〜5位には王冠アイコンが表示されます</li>
+                            <li>✅ Xユーザー名を登録するとリンクが表示されます</li>
+                            <li>✅ ゲーム終了時に自動でランキング登録されます</li>
+                        </ul>
+                    </div>
+                </div>
     </div>
 
     <!-- フッター -->
@@ -70,8 +71,12 @@
                 url: 'api/get_ranking.php',
                 type: 'GET',
                 dataType: 'json',
-                success: function(data) {
-                    displayRanking(data);
+                success: function(response) {
+                    if (response.success && response.rankings) {
+                        displayRanking(response.rankings);
+                    } else {
+                        $('#rankingList').html('<div class="text-center py-5 text-danger">ランキングデータの取得に失敗しました</div>');
+                    }
                 },
                 error: function() {
                     $('#rankingList').html('<div class="text-center py-5 text-danger">ランキングの読み込みに失敗しました</div>');
@@ -87,7 +92,28 @@
             } else {
                 rankingData.forEach((player, index) => {
                     const rank = index + 1;
-                    const crownIcon = rank <= 5 ? '<img src="assets/img/crown.png" alt="王冠" width="20" height="20" class="mr-2">' : '';
+
+                    // 王冠アイコンの設定（1位〜5位のみ）
+                    let crownIcon = '';
+                    let rankColor = 'text-secondary';
+
+                    if (rank === 1) {
+                        crownIcon = '<i class="fas fa-crown text-gold mr-2"></i>';
+                        rankColor = 'text-gold';
+                    } else if (rank === 2) {
+                        crownIcon = '<i class="fas fa-crown text-silver mr-2"></i>';
+                        rankColor = 'text-silver';
+                    } else if (rank === 3) {
+                        crownIcon = '<i class="fas fa-crown text-bronze mr-2"></i>';
+                        rankColor = 'text-bronze';
+                    } else if (rank <= 5) {
+                        crownIcon = '<i class="fas fa-crown text-warning mr-2"></i>';
+                        rankColor = 'text-warning';
+                    }
+
+                    // ユーザー名が空の場合の処理
+                    const displayUsername = player.username && player.username.trim() !== '' ? player.username : '名無し';
+
                     const twitterLink = player.twitter_username ?
                         `<a href="https://twitter.com/${player.twitter_username}" target="_blank" class="text-muted small">@${player.twitter_username}</a>` :
                         '';
@@ -99,16 +125,15 @@
                         <div class="ranking-item border-bottom p-3 ${rank <= 3 ? 'bg-light' : ''}">
                             <div class="row align-items-center">
                                 <div class="col-2 col-md-1">
-                                    <div class="h4 mb-0 text-center ${rank <= 3 ? 'text-warning' : 'text-secondary'}">
+                                    <div class="h4 mb-0 text-center ${rankColor}">
                                         ${crownIcon}${rank}
                                     </div>
                                 </div>
                                 <div class="col-5 col-md-6">
-                                    <div class="h6 mb-1">${player.username}</div>
+                                    <div class="h6 mb-1">${displayUsername}</div>
                                     ${twitterLink}
                                 </div>
                                 <div class="col-5 col-md-5 text-right">
-                                    <div class="h6 mb-1">${player.final_assets.toLocaleString()}円</div>
                                     <div class="small ${profitClass}">
                                         ${profitSign}${player.profit_loss.toLocaleString()}円
                                     </div>

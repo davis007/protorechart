@@ -275,6 +275,19 @@ footer {
     color: #f39c12 !important;
 }
 
+/* ランキング王冠アイコンの色 */
+.text-bronze {
+    color: #cd7f32 !important;
+}
+
+.text-silver {
+    color: #c0c0c0 !important;
+}
+
+.text-gold {
+    color: #ffd700 !important;
+}
+
 /* レスポンシブテーブル */
 .table-responsive {
     border-radius: 8px;

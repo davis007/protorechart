@@ -73,7 +73,63 @@
         </div>
     </footer>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Cookieからユーザー情報を読み込む
+            function loadUserInfoFromCookies() {
+                const username = getCookie('protorechart_username');
+                const twitterUsername = getCookie('protorechart_twitter_username');
+
+                if (username) {
+                    $('#username').val(username);
+                }
+                if (twitterUsername) {
+                    $('#twitter_username').val(twitterUsername);
+                }
+            }
+
+            // フォーム送信時にCookieに保存
+            $('#startForm').on('submit', function() {
+                const username = $('#username').val();
+                const twitterUsername = $('#twitter_username').val();
+
+                // Cookieに保存（30日間有効）
+                setCookie('protorechart_username', username, 30);
+                if (twitterUsername) {
+                    setCookie('protorechart_twitter_username', twitterUsername, 30);
+                } else {
+                    deleteCookie('protorechart_twitter_username');
+                }
+            });
+
+            // Cookie操作関数
+            function setCookie(name, value, days) {
+                const expires = new Date();
+                expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+                document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + expires.toUTCString() + ';path=/';
+            }
+
+            function getCookie(name) {
+                const nameEQ = name + '=';
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+                }
+                return null;
+            }
+
+            function deleteCookie(name) {
+                document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+            }
+
+            // ページ読み込み時にCookieから情報を読み込む
+            loadUserInfoFromCookies();
+        });
+    </script>
 </body>
 </html>
