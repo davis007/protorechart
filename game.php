@@ -146,13 +146,21 @@ if (!isset($_SESSION['game_data'])) {
     <!-- 外部ライブラリ -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/echarts.min.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 
     <!-- アプリケーションスクリプト -->
     <script src="assets/js/chart.js"></script>
     <script src="assets/js/main.js"></script>
 
     <script>
+        // Lightweight Chartsライブラリの読み込み確認
+        window.addEventListener('load', function() {
+            console.log('LightweightCharts available:', typeof LightweightCharts !== 'undefined');
+            if (typeof LightweightCharts !== 'undefined') {
+                console.log('LightweightCharts version:', LightweightCharts.version || 'unknown');
+            }
+        });
+
         // ゲームデータの初期化
         const gameData = <?php echo json_encode($_SESSION['game_data']); ?>;
     </script>

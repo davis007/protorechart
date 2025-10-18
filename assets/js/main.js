@@ -44,19 +44,22 @@ class GameManager {
             <small class="text-muted">${chartData.company.date}</small>
         `);
 
-        // チャートの初期化とデータ読み込み
-        chartManager = initChart();
-        chartManager.loadData(chartData);
+        // チャートの初期化とデータ読み込み（少し遅延させる）
+        setTimeout(() => {
+            chartManager = initChart();
+            chartManager.initChart(); // 明示的に初期化を呼び出し
+            chartManager.loadData(chartData);
 
-        // 最初の価格を表示
-        const currentData = chartManager.updateDisplayedData();
-        this.currentPrice = currentData.price;
+            // 最初の価格を表示
+            const currentData = chartManager.updateDisplayedData();
+            this.currentPrice = currentData.price;
 
-        // UIを更新して現在価格を表示
-        this.updateUI();
+            // UIを更新して現在価格を表示
+            this.updateUI();
 
-        // 次のステップボタンを有効化
-        $('#nextStepBtn').prop('disabled', false);
+            // 次のステップボタンを有効化
+            $('#nextStepBtn').prop('disabled', false);
+        }, 100);
     }
 
     // イベントリスナーの設定
@@ -271,31 +274,13 @@ class GameManager {
         }
     }
 
-    // インジケーター表示の切り替え
+    // インジケーター表示の切り替え（空実装）
     toggleIndicators() {
-        if (!chartManager) return;
-
-        const option = chartManager.chart.getOption();
-        const isVisible = option.series[1].lineStyle.opacity > 0; // MA5の透明度で判定
-
-        // すべてのインジケーターの表示/非表示を切り替え
-        const newOpacity = isVisible ? 0 : 0.5;
-
-        option.series[1].lineStyle.opacity = newOpacity; // MA5
-        option.series[2].lineStyle.opacity = newOpacity; // MA25
-
-        // 凡例の表示状態も更新
-        option.legend.data.forEach((name, index) => {
-            if (name === 'MA5' || name === 'MA25') {
-                option.legend.selected = option.legend.selected || {};
-                option.legend.selected[name] = !isVisible;
-            }
-        });
-
-        // ボタンのテキストを更新
+        // 空実装：後でLightweight Chartsを追加予定
+        // ボタンのテキストのみ更新
+        const currentText = $('#toggleIndicators').text();
+        const isVisible = currentText.includes('非表示');
         $('#toggleIndicators').text(isVisible ? 'インジケーター表示' : 'インジケーター非表示');
-
-        chartManager.chart.setOption(option);
     }
 
     // ゲーム終了処理
