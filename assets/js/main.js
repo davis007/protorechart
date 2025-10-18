@@ -111,7 +111,7 @@ class GameManager {
         this.openPosition(type, quantity, this.currentPrice);
         this.updateUI();
 
-        alert(`${type === 'buy' ? '買い' : '売り'}注文を実行しました\n数量: ${quantity}株\n価格: ${this.currentPrice.toLocaleString()}円\n必要証拠金: ${marginRequired.toLocaleString()}円`);
+        alert(`${type === 'buy' ? '買い' : '売り'}注文を実行しました\n数量: ${quantity}株\n価格: ${this.currentPrice.toLocaleString()}円\n必要証拠金: ${Math.round(marginRequired).toLocaleString()}円`);
     }
 
     // ポジションのオープン
@@ -152,7 +152,7 @@ class GameManager {
 
         this.gameData.profit_loss += profitLoss;
 
-        alert(`利確しました\n損益: ${profitLoss >= 0 ? '+' : ''}${profitLoss.toLocaleString()}円`);
+        alert(`利確しました\n損益: ${profitLoss >= 0 ? '+' : ''}${Math.round(profitLoss).toLocaleString()}円`);
 
         // ポジションのリセット
         this.isPositionOpen = false;
@@ -224,8 +224,8 @@ class GameManager {
 
         // 損益情報の更新
         const profitLossText = this.gameData.profit_loss >= 0 ?
-            `利益: +${this.gameData.profit_loss.toLocaleString()}円` :
-            `損失: ${this.gameData.profit_loss.toLocaleString()}円`;
+            `利益: +${Math.round(this.gameData.profit_loss).toLocaleString()}円` :
+            `損失: ${Math.round(this.gameData.profit_loss).toLocaleString()}円`;
 
         $('#profitLoss').text(profitLossText);
         $('#profitLoss').removeClass('text-success text-danger')
@@ -244,7 +244,7 @@ class GameManager {
             $('#positionDetails').html(`
                 取得価格: ${this.entryPrice.toLocaleString()}円<br>
                 評価損益: <span class="${unrealizedPL >= 0 ? 'text-success' : 'text-danger'}">
-                    ${unrealizedPL >= 0 ? '+' : ''}${unrealizedPL.toLocaleString()}円
+                    ${unrealizedPL >= 0 ? '+' : ''}${Math.round(unrealizedPL).toLocaleString()}円
                 </span>
             `);
 

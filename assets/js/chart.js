@@ -372,7 +372,7 @@ class ChartManager {
     updateDisplayedData() {
         if (this.chartData.prices.length === 0) return { price: 0, time: '' };
 
-        const currentPrice = this.chartData.prices[this.currentStep][1]; // close price
+        const currentPrice = Math.round(this.chartData.prices[this.currentStep][1]); // close priceを整数に丸める
         const currentTime = this.chartData.times[this.currentStep];
 
         return {
