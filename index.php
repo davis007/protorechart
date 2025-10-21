@@ -131,6 +131,5 @@
             loadUserInfoFromCookies();
         });
     </script>
-    
 </body>
 </html>

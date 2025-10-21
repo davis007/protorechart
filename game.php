@@ -35,6 +35,64 @@ if (!isset($_SESSION['game_data'])) {
     <title>ゲーム画面 - プロトレチャート</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+        /* チャートサイズのレスポンシブ対応 */
+        .chart-main {
+            width: calc(100% - 20px);
+            height: 500px;
+        }
+        .chart-indicator {
+            width: calc(100% - 20px);
+            height: 250px;
+        }
+        .chart-indicator-small {
+            width: calc(100% - 20px);
+            height: 200px;
+        }
+        .chart-indicator-small:last-of-type {
+            height: 205px; /* 最下部チャートを5px大きく */
+        }
+        .chart-rci {
+            width: calc(100% - 15px) !important; /* RCIの幅を少し調整 */
+        }
+
+        /* インジケーター非表示時のスタイル（全デバイス共通） */
+        #indicatorToggles.hidden {
+            display: none !important;
+        }
+
+        /* スマホ対応 */
+        @media (max-width: 768px) {
+            .chart-main {
+                height: 350px;
+            }
+            .chart-indicator {
+                height: 175px; /* メインチャートの半分 */
+            }
+            .chart-indicator-small {
+                height: 175px; /* メインチャートの半分 */
+            }
+
+            /* インジケーターチェックボックスを縦並びに */
+            #indicatorToggles label {
+                display: block;
+                margin-bottom: 5px;
+            }
+        }
+
+        /* タブレット対応 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .chart-main {
+                height: 450px;
+            }
+            .chart-indicator {
+                height: 220px;
+            }
+            .chart-indicator-small {
+                height: 180px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container-fluid">
@@ -67,17 +125,20 @@ if (!isset($_SESSION['game_data'])) {
                     </div>
                     <!-- テクニカル切替 -->
                     <div class="card-body py-2 border-bottom">
-                        <div id="indicatorToggles" class="mb-2">
+                        <div id="indicatorToggles" class="mb-2 hidden">
                             <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="MA5" checked> MA5</label>
                             <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="MA25" checked> MA25</label>
-                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="BB"> BB</label>
+                            <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="BB"> BB(σ2)</label>
                             <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="MACD"> MACD</label>
                             <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="RSI"> RSI</label>
                             <label class="mr-2"><input type="checkbox" class="indicator-toggle" data-key="RCI"> RCI</label>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div id="chartContainer" style="height: 500px;"></div>
+                    <div class="card-body" style="padding: 0; padding-bottom: 20px;">
+                        <div id="chartContainer" class="chart-main"></div>
+                        <div id="macdContainer" class="chart-indicator" style="display: none; border-top: 1px solid #2B2B43;"></div>
+                        <div id="rsiContainer" class="chart-indicator-small" style="display: none; border-top: 1px solid #2B2B43;"></div>
+                        <div id="rciContainer" class="chart-indicator-small chart-rci" style="display: none; border-top: 1px solid #2B2B43;"></div>
                     </div>
                 </div>
             </div>
@@ -159,6 +220,27 @@ if (!isset($_SESSION['game_data'])) {
             if (typeof LightweightCharts !== 'undefined') {
                 console.log('LightweightCharts version:', LightweightCharts.version || 'unknown');
             }
+        });
+
+        // インジケーター表示ボタンの機能
+        $(document).ready(function() {
+            let indicatorsVisible = false; // 初期状態は非表示
+
+            $('#toggleIndicators').click(function() {
+                indicatorsVisible = !indicatorsVisible;
+                const $indicatorToggles = $('#indicatorToggles');
+                const $button = $(this);
+
+                if (indicatorsVisible) {
+                    $indicatorToggles.removeClass('hidden');
+                    $button.text('インジケーター非表示');
+                    $button.removeClass('btn-outline-secondary').addClass('btn-secondary');
+                } else {
+                    $indicatorToggles.addClass('hidden');
+                    $button.text('インジケーター表示');
+                    $button.removeClass('btn-secondary').addClass('btn-outline-secondary');
+                }
+            });
         });
 
         // ゲームデータの初期化
